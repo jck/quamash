@@ -1,6 +1,6 @@
 language: python
 python:
-  - "3.3"
+  #- "3.3"
   - "3.4"
 before_install:
   - export DISPLAY=:99.0
@@ -19,12 +19,22 @@ before_install:
   - make
   - sudo make install
   - cd ..
+  # Qt5
+  - curl -O http://download.qt.io/official_releases/qt/5.1/5.1.1/qt-linux-opensource-5.1.1-x86_64-offline.run
+  - chmod +x qt-linux-opensource-5.1.1-x86_64-offline.run
+  - sudo $PWD/qt-linux-opensource-5.1.1-x86_64-offline.run
+  # PyQt5
+  - curl -L http://sourceforge.net/projects/pyqt/files/PyQt5/PyQt-5.4/PyQt-gpl-5.4.tar.gz | tar xz
+  - cd PyQt-x11-gpl-5.4
+  - python configure.py --confirm-license
+  - make
+  - cd ..
   # PySide
   - pip install --find-links wheelhouse/ pyside
   - python `which pyside_postinstall.py` -install
   # Python 3.3
-  - (echo $TRAVIS_PYTHON_VERSION | grep -q '^3.3') && pip install asyncio
+  - if echo $TRAVIS_PYTHON_VERSION | grep -q '^3.3'; then pip install asyncio; fi
 script:
   - py.test --qtimpl PyQt4
-  #- py.test --qtimpl PyQt5
+  - py.test --qtimpl PyQt5
   - py.test --qtimpl PySide
