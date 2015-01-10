@@ -12,50 +12,18 @@ import sys
 import os
 import asyncio
 import time
-from functools import wraps
 from queue import Queue
 from concurrent.futures import Future
-import logging
-logger = logging.getLogger('quamash')
+import warnings
 
-try:
-	QtModuleName = os.environ['QUAMASH_QTIMPL']
-except KeyError:
-	QtModule = None
-else:
-	logger.info('Forcing use of {} as Qt Implementation'.format(QtModuleName))
-	QtModule = __import__(QtModuleName)
-
-if not QtModule:
-	for QtModuleName in ('PyQt5', 'PyQt4', 'PySide'):
-		try:
-			QtModule = __import__(QtModuleName)
-		except ImportError:
-			continue
-		else:
-			break
-	else:
-		raise ImportError('No Qt implementations found')
-
-logger.info('Using Qt Implementation: {}'.format(QtModuleName))
-
-QtCore = __import__(QtModuleName + '.QtCore', fromlist=(QtModuleName,))
-QtGui = __import__(QtModuleName + '.QtGui', fromlist=(QtModuleName,))
-if QtModuleName == 'PyQt5':
-	from PyQt5 import QtWidgets
-	QApplication = QtWidgets.QApplication
-else:
-	QApplication = QtGui.QApplication
-
-if not hasattr(QtCore, 'Signal'):
-	QtCore.Signal = QtCore.pyqtSignal
-
+if 'QUAMASH_QTIMPL' in os.environ:
+	warnings.warn("Don't use QUAMASH_QTIMPL to set the Qt Implementation it will be ignored.")
 
 from ._common import with_logger
 
 
 @with_logger
-class _QThreadWorker(QtCore.QThread):
+class _QThreadWorker:
 
 	"""
 	Read from the queue.
@@ -103,25 +71,22 @@ class _QThreadWorker(QtCore.QThread):
 
 
 @with_logger
-class QThreadExecutor(QtCore.QObject):
+class QThreadExecutor:
 
 	"""
 	ThreadExecutor that produces QThreads.
 
 	Same API as `concurrent.futures.Executor`
-
-	>>> from quamash import QThreadExecutor
-	>>> with QThreadExecutor(5) as executor:
-	...     f = executor.submit(lambda x: 2 + x, 2)
-	...     r = f.result()
-	...     assert r == 4
 	"""
 
-	def __init__(self, max_workers=10, parent=None):
-		super().__init__(parent)
+	def __init__(self, thread_type, max_workers=10):
+		assert isinstance(thread_type, type)
+		assert isinstance(max_workers, int)
+
 		self.__max_workers = max_workers
 		self.__queue = Queue()
-		self.__workers = [_QThreadWorker(self.__queue, i + 1) for i in range(max_workers)]
+		self.__worker_factory = type('ThreadWorkerFactory', (_QThreadWorker, thread_type), {})
+		self.__workers = [self.__worker_factory(self.__queue, i + 1) for i in range(max_workers)]
 		self.__been_shutdown = False
 
 		for w in self.__workers:
@@ -162,59 +127,6 @@ class QThreadExecutor(QtCore.QObject):
 	def __exit__(self, *args):
 		self.shutdown()
 
-
-def _easycallback(fn):
-	"""
-	Decorator that wraps a callback in a signal.
-
-	It also packs & unpacks arguments, and makes the wrapped function effectively
-	threadsafe. If you call the function from one thread, it will be executed in
-	the thread the QObject has affinity with.
-
-	Remember: only objects that inherit from QObject can support signals/slots
-
-	>>> import asyncio
-	>>>
-	>>> import quamash
-	>>> from quamash import QEventLoop, QtCore, QtGui, QApplication
-	>>> QThread, QObject = quamash.QtCore.QThread, quamash.QtCore.QObject
-	>>>
-	>>> app = QApplication.instance() or QApplication([])
-	>>>
-	>>> global_thread = QThread.currentThread()
-	>>> class MyObject(QObject):
-	...     @_easycallback
-	...     def mycallback(self):
-	...         global global_thread, mythread
-	...         cur_thread = QThread.currentThread()
-	...         assert cur_thread is not global_thread
-	...         assert cur_thread is mythread
-	>>>
-	>>> mythread = QThread()
-	>>> mythread.start()
-	>>> myobject = MyObject()
-	>>> myobject.moveToThread(mythread)
-	>>>
-	>>> @asyncio.coroutine
-	... def mycoroutine():
-	...     myobject.mycallback()
-	>>>
-	>>> loop = QEventLoop(app)
-	>>> with loop:
-	...     loop.run_until_complete(mycoroutine())
-	"""
-	@wraps(fn)
-	def in_wrapper(self, *args, **kwargs):
-		return signaler.signal.emit(self, args, kwargs)
-
-	class Signaler(QtCore.QObject):
-		signal = QtCore.Signal(object, tuple, dict)
-
-	signaler = Signaler()
-	signaler.signal.connect(lambda self, args, kwargs: fn(self, *args, **kwargs))
-	return in_wrapper
-
-
 if os.name == 'nt':
 	from . import _windows
 	_baseclass = _windows.baseclass
@@ -226,27 +138,11 @@ else:
 @with_logger
 class QEventLoop(_baseclass):
 
-	"""
-	Implementation of asyncio event loop that uses the Qt Event loop.
+	"""Implementation of asyncio event loop that uses the Qt Event loop."""
 
-	>>> import quamash, asyncio
-	>>> from quamash import QtCore, QtGui, QApplication
-	>>> app = QApplication.instance() or QApplication([])
-	>>>
-	>>> @asyncio.coroutine
-	... def xplusy(x, y):
-	...     yield from asyncio.sleep(.1)
-	...     assert x + y == 4
-	...     yield from asyncio.sleep(.1)
-	>>>
-	>>> with QEventLoop(app) as loop:
-	...     loop.run_until_complete(xplusy(2, 2))
-	"""
-
-	def __init__(self, app=None):
+	def __init__(self, app):
 		self.__timers = []
-		self.__app = app or QApplication.instance()
-		assert self.__app is not None, 'No QApplication has been instantiated'
+		self.__app = app
 		self.__is_running = False
 		self.__debug_enabled = False
 		self.__default_executor = None
@@ -255,6 +151,18 @@ class QEventLoop(_baseclass):
 		self._write_notifiers = {}
 
 		assert self.__app is not None
+
+		qt_impl = sys.modules[app.__class__.__module__.split('.', 1)[0]]
+		self.QtCore = qt_impl.QtCore
+
+		class Signaler(self.QtCore.QObject):
+			try:
+				call_soon_signal = self.QtCore.Signal(object, tuple)
+			except AttributeError:
+				call_soon_signal = self.QtCore.pyqtSignal(object, tuple)
+
+		self.signaler = Signaler()
+		self.signaler.call_soon_signal.connect(lambda fn, args: self.call_soon(fn, *args))
 
 		super().__init__()
 
@@ -338,7 +246,7 @@ class QEventLoop(_baseclass):
 			handle._run()
 
 		self._logger.debug('Adding callback {} with delay {}'.format(handle, delay))
-		timer = QtCore.QTimer(self.__app)
+		timer = self.QtCore.QTimer(self.__app)
 		timer.timeout.connect(upon_timeout)
 		timer.setSingleShot(True)
 		timer.start(delay * 1000)
@@ -349,6 +257,10 @@ class QEventLoop(_baseclass):
 	def call_soon(self, callback, *args):
 		"""Register a callback to be run on the next iteration of the event loop."""
 		return self.call_later(0, callback, *args)
+
+	def call_soon_threadsafe(self, callback, *args):
+		"""Thread-safe version of call_soon."""
+		self.signaler.call_soon_signal.emit(callback, args)
 
 	def call_at(self, when, callback, *args):
 		"""Register callback to be invoked at a certain time."""
@@ -370,7 +282,7 @@ class QEventLoop(_baseclass):
 			existing.activated.disconnect()
 			# will get overwritten by the assignment below anyways
 
-		notifier = QtCore.QSocketNotifier(fd, QtCore.QSocketNotifier.Read)
+		notifier = self.QtCore.QSocketNotifier(fd, self.QtCore.QSocketNotifier.Read)
 		notifier.setEnabled(True)
 		self._logger.debug('Adding reader callback for file descriptor {}'.format(fd))
 		notifier.activated.connect(
@@ -402,7 +314,7 @@ class QEventLoop(_baseclass):
 			existing.activated.disconnect()
 			# will get overwritten by the assignment below anyways
 
-		notifier = QtCore.QSocketNotifier(fd, QtCore.QSocketNotifier.Write)
+		notifier = self.QtCore.QSocketNotifier(fd, self.QtCore.QSocketNotifier.Write)
 		notifier.setEnabled(True)
 		self._logger.debug('Adding writer callback for file descriptor {}'.format(fd))
 		notifier.activated.connect(
@@ -442,13 +354,6 @@ class QEventLoop(_baseclass):
 			if fd in notifiers:
 				notifier.setEnabled(True)
 
-	# Methods for interacting with threads.
-
-	@_easycallback
-	def call_soon_threadsafe(self, callback, *args):
-		"""Thread-safe version of call_soon."""
-		self.call_soon(callback, *args)
-
 	def run_in_executor(self, executor, callback, *args):
 		"""Run callback in executor.
 
@@ -468,7 +373,7 @@ class QEventLoop(_baseclass):
 		executor = executor or self.__default_executor
 		if executor is None:
 			self._logger.debug('Creating default executor')
-			executor = self.__default_executor = QThreadExecutor()
+			executor = self.__default_executor = QThreadExecutor(thread_type=self.QtCore.QThread)
 		self._logger.debug('Using default executor')
 
 		return asyncio.wrap_future(executor.submit(callback, *args))

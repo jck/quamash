@@ -30,9 +30,19 @@ class _SubprocessProtocol(asyncio.SubprocessProtocol):
 		asyncio.get_event_loop().stop()
 
 
-@pytest.fixture(scope='session')
-def application():
-	return quamash.QApplication.instance() or quamash.QApplication([])
+@pytest.fixture(scope='session', params=['PySide', 'PyQt4', 'PyQt5'])
+def application(request):
+	try:
+		_QApplication = __import__(
+			request.param + '.QtWidgets',
+			fromlist=(request.param,)
+		).QApplication
+	except ImportError:
+		_QApplication = __import__(
+			request.param + '.QtGui',
+			fromlist=(request.param,)
+		).QApplication
+	return _QApplication.instance() or _QApplication([])
 
 
 @pytest.fixture
@@ -62,12 +72,14 @@ def loop(request, application):
 @pytest.fixture(
 	params=[None, quamash.QThreadExecutor, ThreadPoolExecutor, ProcessPoolExecutor]
 )
-def executor(request):
+def executor(request, loop):
 	exc_cls = request.param
 	if exc_cls is None:
 		return None
-
-	exc = exc_cls(1)  # FIXME? fixed number of workers?
+	elif exc_cls is quamash.QThreadExecutor:
+		exc = exc_cls(loop.QtCore.QThread)
+	else:
+		exc = exc_cls(1)  # FIXME? fixed number of workers?
 	request.addfinalizer(exc.shutdown)
 	return exc
 
