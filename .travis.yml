@@ -1,34 +1,35 @@
 language: python
 python:
-  #- "3.3"
+  - "3.3"
   - "3.4"
 before_install:
   - export DISPLAY=:99.0
   - sh -e /etc/init.d/xvfb start
   - sudo apt-get install -y libqt4-dev
-  # PyQt4
+  # SIP
   - curl -L http://sourceforge.net/projects/pyqt/files/sip/sip-4.16.5/sip-4.16.5.tar.gz | tar xz
   - cd sip-4.16.5
   - python configure.py
   - make
   - sudo make install
   - cd ..
+  # PyQt4
   - curl -L http://sourceforge.net/projects/pyqt/files/PyQt4/PyQt-4.11.3/PyQt-x11-gpl-4.11.3.tar.gz | tar xz
   - cd PyQt-x11-gpl-4.11.3
-  - python configure.py --confirm-license
+  - python configure.py --no-designer-plugin -e QtCore -e QtGui -c --confirm-license
   - make
   - sudo make install
   - cd ..
   # Qt5
-  - curl -O http://download.qt.io/official_releases/qt/5.1/5.1.1/qt-linux-opensource-5.1.1-x86_64-offline.run
-  - chmod +x qt-linux-opensource-5.1.1-x86_64-offline.run
-  - sudo $PWD/qt-linux-opensource-5.1.1-x86_64-offline.run
+  #- curl -OL http://download.qt.io/official_releases/qt/5.1/5.1.1/qt-linux-opensource-5.1.1-x86_64-offline.run
+  #- chmod +x qt-linux-opensource-5.1.1-x86_64-offline.run
+  #- sudo $PWD/qt-linux-opensource-5.1.1-x86_64-offline.run
   # PyQt5
-  - curl -L http://sourceforge.net/projects/pyqt/files/PyQt5/PyQt-5.4/PyQt-gpl-5.4.tar.gz | tar xz
-  - cd PyQt-x11-gpl-5.4
-  - python configure.py --confirm-license
-  - make
-  - cd ..
+  #- curl -L http://sourceforge.net/projects/pyqt/files/PyQt5/PyQt-5.4/PyQt-gpl-5.4.tar.gz | tar xz
+  #- cd PyQt-x11-gpl-5.4
+  #- python configure.py --confirm-license
+  #- make
+  #- cd ..
   # PySide
   - pip install --find-links wheelhouse/ pyside
   - python `which pyside_postinstall.py` -install
@@ -36,5 +37,5 @@ before_install:
   - if echo $TRAVIS_PYTHON_VERSION | grep -q '^3.3'; then pip install asyncio; fi
 script:
   - py.test --qtimpl PyQt4
-  - py.test --qtimpl PyQt5
+  #- py.test --qtimpl PyQt5
   - py.test --qtimpl PySide
