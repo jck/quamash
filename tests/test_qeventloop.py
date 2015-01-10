@@ -30,17 +30,17 @@ class _SubprocessProtocol(asyncio.SubprocessProtocol):
 		asyncio.get_event_loop().stop()
 
 
-@pytest.fixture(scope='session', params=['PySide', 'PyQt4', 'PyQt5'])
-def application(request):
+@pytest.fixture
+def application(qtimpl):
 	try:
 		_QApplication = __import__(
-			request.param + '.QtWidgets',
-			fromlist=(request.param,)
+			qtimpl + '.QtWidgets',
+			fromlist=(qtimpl,)
 		).QApplication
 	except ImportError:
 		_QApplication = __import__(
-			request.param + '.QtGui',
-			fromlist=(request.param,)
+			qtimpl + '.QtGui',
+			fromlist=(qtimpl,)
 		).QApplication
 	return _QApplication.instance() or _QApplication([])
 

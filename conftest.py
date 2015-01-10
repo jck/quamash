@@ -9,3 +9,12 @@ if os.name == 'nt':
 	collect_ignore = ['quamash/_unix.py']
 else:
 	collect_ignore = ['quamash/_windows.py']
+
+
+def pytest_addoption(parser):
+	parser.addoption("--qtimpl", default='PySide')
+
+
+def pytest_generate_tests(metafunc):
+	if 'qtimpl' in metafunc.fixturenames:
+		metafunc.parametrize('qtimpl', [metafunc.config.option.qtimpl])

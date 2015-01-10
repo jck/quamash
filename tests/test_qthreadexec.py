@@ -5,9 +5,9 @@ import pytest
 import quamash
 
 
-@pytest.fixture(params=['PySide', 'PyQt4', 'PyQt5'])
-def qthread_factory(request):
-	return __import__(request.param + '.QtCore', fromlist=(request.param,)).QThread
+@pytest.fixture
+def qthread_factory(request, qtimpl):
+	return __import__(qtimpl + '.QtCore', fromlist=(qtimpl,)).QThread
 
 
 @pytest.fixture
