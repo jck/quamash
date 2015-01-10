@@ -1,5 +1,6 @@
 language: python
 python:
+  - "3.3"
   - "3.4"
 before_install:
   - export DISPLAY=:99.0
@@ -18,8 +19,11 @@ before_install:
   - make
   - sudo make install
   - cd ..
+  # PySide
   - pip install --find-links wheelhouse/ pyside
   - python `which pyside_postinstall.py` -install
+  # Python 3.3
+  - (echo $TRAVIS_PYTHON_VERSION | grep -q '^3.3') && pip install asyncio
 script:
   - py.test --qtimpl PyQt4
   #- py.test --qtimpl PyQt5
