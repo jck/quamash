@@ -21,9 +21,12 @@ before_install:
   - sudo make install
   - cd ..
   # Qt5
-  #- curl -OL http://download.qt.io/official_releases/qt/5.1/5.1.1/qt-linux-opensource-5.1.1-x86_64-offline.run
-  #- chmod +x qt-linux-opensource-5.1.1-x86_64-offline.run
-  #- sudo $PWD/qt-linux-opensource-5.1.1-x86_64-offline.run
+  # ## It's unlikely this will work at least until
+  #- mkdir -p /downloads
+  #- cd /downloads
+  #- curl -OL http://download.qt.io/official_releases/qt/5.3/5.3.0/qt-linux-opensource-5.3.0-x86_64.run
+  #- chmod +x qt-linux-opensource-5.3.0-x86_64.run
+  #- ./qt-linux-opensource-5.3.0-x86_64.run
   # PyQt5
   #- curl -L http://sourceforge.net/projects/pyqt/files/PyQt5/PyQt-5.4/PyQt-gpl-5.4.tar.gz | tar xz
   #- cd PyQt-x11-gpl-5.4

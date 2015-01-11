@@ -29,6 +29,7 @@ setup(
 		'Operating System :: Microsoft :: Windows',
 		'Operating System :: MacOS :: MacOS X',
 		'Operating System :: POSIX',
+		'Programming Language :: Python :: 3.3',
 		'Programming Language :: Python :: 3.4',
 		'Programming Language :: Python :: 3 :: Only',
 		'Environment :: X11 Applications :: Qt',
