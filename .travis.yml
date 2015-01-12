@@ -22,6 +22,7 @@ before_install:
   - cd ..
   # Qt5
   - sudo add-apt-repository -y ppa:beineri/opt-qt54
+  - sudo apt-get update
   - sudo apt-get install -y qt54-meta
   - source /opt/qt54/qt54-env.sh
   # PyQt5
