@@ -10,7 +10,7 @@ $GET_PIP_PATH = "C:\get-pip.py"
 function DownloadPython ($python_version, $platform_suffix) {
     $webclient = New-Object System.Net.WebClient
     $filename = "python-" + $python_version + $platform_suffix + ".msi"
-    $url = $BASE_URL + $python_version + "\\" + $filename
+    $url = $BASE_URL + $python_version + "\" + $filename
 
     $basedir = $pwd.Path + "\"
     $filepath = $basedir + $filename
@@ -58,8 +58,8 @@ function InstallPython ($python_version, $architecture, $python_home) {
 
 
 function InstallPip ($python_home) {
-    $pip_path = $python_home + "\\Scripts\\pip.exe"
-    $python_path = $python_home + "\\python.exe"
+    $pip_path = $python_home + "\Scripts\pip.exe"
+    $python_path = $python_home + "\python.exe"
     if (-not(Test-Path $pip_path)) {
         Write-Host "Installing pip..."
         $webclient = New-Object System.Net.WebClient
@@ -72,7 +72,7 @@ function InstallPip ($python_home) {
 }
 
 function InstallPackage ($python_home, $pkg) {
-    $pip_path = $python_home + "\\Scripts\\pip.exe"
+    $pip_path = $python_home + "\Scripts\pip.exe"
     & $pip_path install $pkg
 }
 
