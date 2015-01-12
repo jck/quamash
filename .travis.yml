@@ -21,8 +21,8 @@ before_install:
   - sudo make install
   - cd ..
   # Qt5
-  - add-apt-repository -y ppa:beineri/opt-qt54
-  - apt-get install -y qt54-meta
+  - sudo add-apt-repository -y ppa:beineri/opt-qt54
+  - sudo apt-get install -y qt54-meta
   - source /opt/qt54/qt54-env.sh
   # PyQt5
   - curl -L http://sourceforge.net/projects/pyqt/files/PyQt5/PyQt-5.4/PyQt-gpl-5.4.tar.gz | tar xz
