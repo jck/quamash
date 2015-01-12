@@ -27,7 +27,7 @@ before_install:
   - source /opt/qt54/bin/qt54-env.sh
   # PyQt5
   - curl -L http://sourceforge.net/projects/pyqt/files/PyQt5/PyQt-5.4/PyQt-gpl-5.4.tar.gz | tar xz
-  - cd PyQt-x11-gpl-5.4
+  - cd PyQt-gpl-5.4
   - python configure.py -c --confirm-license --no-designer-plugin -e QtCore -e QtGui -e QtWidgets
   - make
   - cd ..
