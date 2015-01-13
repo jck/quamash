@@ -76,11 +76,17 @@ function InstallPackage ($python_home, $pkg) {
     & $pip_path install $pkg
 }
 
+#function DownloadPyQt ($python_version, $pyqt_version) {
+
+#}
+
+#function InstallPyQt ($python_home, $python_version, $pyqt_version) {
+    #$python_path = $python_home + "\python.exe"
+    #$pyqt_installer = DownloadPyQt($python_version, $pyqt_version)
+#}
+
 function main () {
-    InstallPython $env:PYTHON_VERSION $env:PYTHON_ARCH $env:PYTHON
-    Write-Host "## DEBUG ##"
-    dir $env:PYTHON
-    Write-Host "## /DEBUG ##"
+    # Uninstall Python 3.4
     InstallPip $env:PYTHON
     InstallPackage $env:PYTHON wheel
     InstallPackage $env:PYTHON pytest

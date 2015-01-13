@@ -11,7 +11,7 @@ environment:
       #PYTHON_VERSION: "3.3.5"
       #PYTHON_ARCH: "32"
 
-    - PYTHON: "C:\\Python34-x86-PySide"
+    - PYTHON: "C:\\Python34"
       PYTHON_VERSION: "3.4.1"
       PYTHON_ARCH: "32"
       QTIMPL: "PySide"
@@ -45,7 +45,7 @@ install:
 build: off
 
 test_script:
-  - "%WITH_COMPILER% %PYTHON%/python py.test --qtimpl %QTIMPL%"
+  - "%WITH_COMPILER% %PYTHON%\\python.exe py.test --qtimpl %QTIMPL%"
 
 #on_success:
 #  - TODO: upload the content of dist/*.whl to a public wheelhouse
