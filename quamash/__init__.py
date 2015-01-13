@@ -229,7 +229,7 @@ class QEventLoop(_baseclass):
 
 		self.__app = None
 
-		for notifier in itertools.chain(self._read_notifiers, self._write_notifiers):
+		for notifier in itertools.chain(self._read_notifiers.values(), self._write_notifiers.values()):
 			notifier.setEnabled(False)
 
 		self._read_notifiers = None
