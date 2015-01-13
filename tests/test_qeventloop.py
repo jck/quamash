@@ -45,7 +45,7 @@ def application(qtimpl):
 	return _QApplication.instance() or _QApplication([])
 
 
-@pytest.fixture
+@pytest.fixture(scope='function')
 def loop(request, application):
 	lp = quamash.QEventLoop(application)
 	asyncio.set_event_loop(lp)
