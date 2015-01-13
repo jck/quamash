@@ -28,7 +28,7 @@ class _ProactorEventLoop(asyncio.ProactorEventLoop):
 		super().__init__(_IocpProactor())
 
 		class EventPoller(self.QtCore.QObject, _EventPoller):
-			event_worker_factory = type('_EventWorker', (self.QtCore.QThread, _EventWorker), {})
+			event_worker_factory = type('_EventWorker', (_EventWorker, self.QtCore.QThread), {})
 			semaphore_factory = self.QtCore.QSemaphore
 
 			try:
