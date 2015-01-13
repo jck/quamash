@@ -25,7 +25,7 @@ class _ProactorEventLoop(asyncio.ProactorEventLoop):
 	"""Proactor based event loop."""
 
 	def __init__(self):
-		super().__init__(self, _IocpProactor())
+		super().__init__(_IocpProactor())
 
 		class EventPoller(self.QtCore.QObject, _EventPoller):
 			event_worker_factory = type('_EventWorker', (self.QtCore.QThread, _EventWorker), {})
