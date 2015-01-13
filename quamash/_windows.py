@@ -33,7 +33,7 @@ class _ProactorEventLoop(asyncio.ProactorEventLoop):
 
 			try:
 				sig_events = self.QtCore.Signal(list)
-			except AttributError:
+			except AttributeError:
 				sig_events = self.QtCore.pyqtSignal(list)
 
 		self.__event_poller = EventPoller()
