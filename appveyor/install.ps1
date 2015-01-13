@@ -23,16 +23,14 @@ function InstallPip ($python_home) {
 
 function InstallPackage ($python_home, $pkg) {
     $pip_path = $python_home + "\Scripts\pip.exe"
-    & $pip_path install $pkg
+    & $pip_path install -U $pkg
 }
 
 function main () {
     InstallPip $env:PYTHON
     InstallPackage $env:PYTHON wheel
     InstallPackage $env:PYTHON pytest
-    if($env:PYTHON_VERSION -match "^3.3"){
-        InstallPackage $env:PYTHON asyncio
-    }
+    InstallPackage $env:PYTHON asyncio
     if($env:QTIMPL -eq "PySide"){
         InstallPackage $env:Python PySide
     }
