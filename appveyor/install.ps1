@@ -34,8 +34,8 @@ function main () {
     if($env:QTIMPL -eq "PySide"){
         InstallPackage $env:Python PySide
     } elseif ($env:QTIMPL -eq "PyQt4"){
-        Invoke-WebRequest "http://sourceforge.net/projects/pyqt/files/PyQt4/PyQt-4.11.3/PyQt4-4.11.3-gpl-Py3.4-Qt4.8.6-x32.exe" -OutFile "install-PyQt4.exe"
-        Start-Process -FilePath install-PyQt4.exe -ArgumentList "/S"
+        Invoke-WebRequest "http://sourceforge.net/projects/pyqt/files/PyQt4/PyQt-4.11.3/PyQt4-4.11.3-gpl-Py3.4-Qt4.8.6-x32.exe" -OutFile C:\install-PyQt4.exe
+        Start-Process -FilePath C:\install-PyQt4.exe -ArgumentList "/S"
     }
 }
 
