@@ -17,8 +17,6 @@ environment:
       PYTHON_ARCH: "32"
       QTIMPL: "PySide"
 
-build: off
-
 init:
   - "ECHO %PYTHON% %PYTHON_VERSION% %PYTHON_ARCH% %QTIMPL%"
 
