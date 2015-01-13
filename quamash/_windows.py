@@ -15,21 +15,28 @@ except ImportError:  # noqa
 
 import math
 
-from . import QtCore
 from ._common import with_logger
 
 UINT32_MAX = 0xffffffff
 
 
-class _ProactorEventLoop(QtCore.QObject, asyncio.ProactorEventLoop):
+class _ProactorEventLoop(asyncio.ProactorEventLoop):
 
 	"""Proactor based event loop."""
 
 	def __init__(self):
-		QtCore.QObject.__init__(self)
-		asyncio.ProactorEventLoop.__init__(self, _IocpProactor())
+		super().__init__(self, _IocpProactor())
 
-		self.__event_poller = _EventPoller()
+		class EventPoller(self.QtCore.QObject, _EventPoller):
+			event_worker_factory = type('_EventWorker', (self.QtCore.QThread, _EventWorker), {})
+			semaphore_factory = self.QtCore.QSemaphore
+
+			try:
+				sig_events = self.QtCore.Signal(list)
+			except AttributError:
+				sig_events = self.QtCore.pyqtSignal(list)
+
+		self.__event_poller = EventPoller()
 		self.__event_poller.sig_events.connect(self._process_events)
 
 	def _process_events(self, events):
@@ -113,14 +120,14 @@ class _IocpProactor(windows_events.IocpProactor):
 
 
 @with_logger
-class _EventWorker(QtCore.QThread):
+class _EventWorker:
 	def __init__(self, proactor, parent):
 		super().__init__()
 
 		self.__stop = False
 		self.__proactor = proactor
 		self.__sig_events = parent.sig_events
-		self.__semaphore = QtCore.QSemaphore()
+		self.__semaphore = parent.semaphore_factory()
 
 	def start(self):
 		super().start()
@@ -145,15 +152,13 @@ class _EventWorker(QtCore.QThread):
 
 
 @with_logger
-class _EventPoller(QtCore.QObject):
+class _EventPoller:
 
 	"""Polling of events in separate thread."""
 
-	sig_events = QtCore.Signal(list)
-
 	def start(self, proactor):
 		self._logger.debug('Starting (proactor: {})...'.format(proactor))
-		self.__worker = _EventWorker(proactor, self)
+		self.__worker = self.event_worker_factory(proactor, self)
 		self.__worker.start()
 
 	def stop(self):
