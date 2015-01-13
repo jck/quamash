@@ -15,6 +15,7 @@ import time
 from queue import Queue
 from concurrent.futures import Future
 import warnings
+import itertools
 
 if 'QUAMASH_QTIMPL' in os.environ:
 	warnings.warn("Don't use QUAMASH_QTIMPL to set the Qt Implementation it will be ignored.")
@@ -228,7 +229,7 @@ class QEventLoop(_baseclass):
 
 		self.__app = None
 
-		for notifier in (*self._read_notifiers, *self._write_notifiers):
+		for notifier in itertools.chain(self._read_notifiers, self._write_notifiers):
 			notifer.setEnabled(False)
 
 		self._read_notifiers = None
