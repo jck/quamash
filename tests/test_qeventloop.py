@@ -219,7 +219,6 @@ def test_loop_running(loop):
 	"""Verify that loop.is_running returns True when running."""
 	@asyncio.coroutine
 	def is_running():
-		nonlocal loop
 		assert loop.is_running()
 
 	loop.run_until_complete(is_running())
@@ -228,6 +227,35 @@ def test_loop_running(loop):
 def test_loop_not_running(loop):
 	"""Verify that loop.is_running returns False when not running."""
 	assert not loop.is_running()
+
+
+def test_stop_restart(loop):
+	"""Verify is_running() returns the correct value when stopping and restarting the loop."""
+	@asyncio.coroutine
+	def is_running():
+		assert loop.is_running()
+
+	assert not loop.is_running()
+	loop.run_until_complete(is_running())
+	assert not loop.is_running()
+	loop.run_until_complete(is_running())
+
+
+def test_cant_start_after_closing(loop, recwarn):
+	"""Verify a loop cannot be started after closing and raises a RuntimeError."""
+	loop.close()
+	with pytest.raises(RuntimeError):
+		loop.run_forever()
+
+
+def test_cant_run_if_running(loop):
+	"""Verify a loop cannot be started which is already running and raises and raises a RuntimeError."""
+	@asyncio.coroutine
+	def start_loop():
+		loop.run_forever()
+
+	with pytest.raises(RuntimeError):
+		loop.run_until_complete(start_loop())
 
 
 def test_can_function_as_context_manager(application):

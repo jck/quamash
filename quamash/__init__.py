@@ -169,6 +169,12 @@ class QEventLoop(_baseclass):
 
 	def run_forever(self):
 		"""Run eventloop forever."""
+		if self.__app is None:
+			raise RuntimeError("Event loop is closed")
+
+		if self.__is_running:
+			raise RuntimeError("Cannot start a loop which is already running.")
+
 		self.__is_running = True
 		self._before_run_forever()
 		try:
@@ -216,6 +222,10 @@ class QEventLoop(_baseclass):
 
 		The loop cannot be restarted after it has been closed.
 		"""
+		if self.__app is None:
+			self._logger.debug('Loop already closed.')
+			return
+
 		self._logger.debug('Closing event loop...')
 		if self.__default_executor is not None:
 			self.__default_executor.shutdown()
