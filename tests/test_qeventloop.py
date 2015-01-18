@@ -370,7 +370,7 @@ def test_can_add_reader(loop, sock_pair):
 	fut = asyncio.Future()
 	loop.add_reader(srv_sock.fileno(), can_read)
 	assert len(loop._read_notifiers) == exp_num_notifiers, 'Notifier should be added'
-	loop.run_until_complete(asyncio.wait_for(fut, timeout=3.0))
+	loop.run_until_complete(asyncio.wait_for(fut, timeout=1.0))
 
 	assert got_msg == ref_msg
 
@@ -413,7 +413,7 @@ def test_can_add_writer(loop, sock_pair):
 	fut = asyncio.Future()
 	loop.add_writer(client_sock.fileno(), can_write)
 	assert len(loop._write_notifiers) == 1, 'Notifier should be added'
-	loop.run_until_complete(asyncio.wait_for(fut, timeout=3.0))
+	loop.run_until_complete(asyncio.wait_for(fut, timeout=1.0))
 
 
 def test_can_remove_writer(loop, sock_pair):
@@ -452,7 +452,7 @@ def test_add_reader_should_disable_qsocket_notifier_on_callback(loop, sock_pair)
 	fut = asyncio.Future()
 	loop.add_reader(srv_sock.fileno(), can_read)
 	notifier = loop._read_notifiers[srv_sock.fileno()]
-	loop.run_until_complete(asyncio.wait_for(fut, timeout=3.0))
+	loop.run_until_complete(asyncio.wait_for(fut, timeout=1.0))
 
 
 def test_add_writer_should_disable_qsocket_notifier_on_callback(loop, sock_pair):
@@ -476,7 +476,7 @@ def test_add_writer_should_disable_qsocket_notifier_on_callback(loop, sock_pair)
 	fut = asyncio.Future()
 	loop.add_writer(client_sock.fileno(), can_write)
 	notifier = loop._write_notifiers[client_sock.fileno()]
-	loop.run_until_complete(asyncio.wait_for(fut, timeout=3.0))
+	loop.run_until_complete(asyncio.wait_for(fut, timeout=1.0))
 
 
 def test_reader_writer_echo(loop, sock_pair):
@@ -495,7 +495,7 @@ def test_reader_writer_echo(loop, sock_pair):
 		assert data == read_data
 		s_writer.close()
 
-	loop.run_until_complete(asyncio.wait_for(mycoro(), timeout=3.0))
+	loop.run_until_complete(asyncio.wait_for(mycoro(), timeout=1.0))
 
 
 def test_regression_bug13(loop, sock_pair):
@@ -545,7 +545,7 @@ def test_regression_bug13(loop, sock_pair):
 	asyncio.async(server_coro())
 
 	both_done = asyncio.gather(client_done, server_done)
-	loop.run_until_complete(asyncio.wait_for(both_done, timeout=3.0))
+	loop.run_until_complete(asyncio.wait_for(both_done, timeout=1.0))
 	assert result1 == b'1'
 	assert result3 == b'3'
 
