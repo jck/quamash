@@ -50,8 +50,12 @@ def loop(request, application):
 		finally:
 			asyncio.set_event_loop(None)
 
-		if additional_exceptions:
-			raise additional_exceptions[0]['exception']
+		
+		for exc in additional_exceptions:
+			if isinstance(exc['exception'], WindowsError) and exc['exception'].winerror == 6:
+				# ignore Invalid Handle Errors
+				continue
+			raise exc['exception']
 
 	def except_handler(loop, ctx):
 		additional_exceptions.append(ctx)
