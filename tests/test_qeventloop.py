@@ -5,6 +5,7 @@ import asyncio
 import locale
 import logging
 import sys
+import os
 import ctypes
 import multiprocessing
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
@@ -50,9 +51,12 @@ def loop(request, application):
 		finally:
 			asyncio.set_event_loop(None)
 
-		
 		for exc in additional_exceptions:
-			if isinstance(exc['exception'], WindowsError) and exc['exception'].winerror == 6:
+			if (
+				os.name == 'nt' and
+				isinstance(exc['exception'], WindowsError) and
+				exc['exception'].winerror == 6
+			):
 				# ignore Invalid Handle Errors
 				continue
 			raise exc['exception']
